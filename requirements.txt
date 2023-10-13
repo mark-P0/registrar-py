@@ -1,0 +1,4 @@
+requests_html==0.10.0
+Kivy==1.11.1
+beautifulsoup4==4.8.2
+kivymd==0.104.0

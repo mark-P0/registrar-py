@@ -1,0 +1,354 @@
+#:kivy 1.11.1
+
+<Container>:
+    id: container_id
+
+    NavigationLayout:
+        ScreenManager:
+            Screen:
+                BoxLayout:
+                    orientation: 'vertical'
+
+                    MDToolbar:
+                        # pos_hint: {'top': 1}
+                        #size_hint_y: None
+                        id: app_toolbar
+
+                        title: 'Enrollment Information'
+                        specific_text_color: (1,1,1,1)
+                        elevation: 0
+
+                        left_action_items: [['menu', lambda *args: nav_drawer.set_state('open')]]
+                        right_action_items: [["chevron-left", content_screen.previous_page], ['numeric-1', lambda x: x], ["chevron-right", content_screen.next_page]]
+
+                    MDBottomNavigation:
+                        id: nav_bottom
+
+                        MDBottomNavigationItem:
+                            name: 'screen 1'
+
+                            text: 'Subjects'
+                            icon: 'magnify'
+
+                            on_enter:
+                                # root.ids.app_toolbar.title = 'Enrollment Information'
+                                root.ids.app_toolbar.title = root.current_keyword if root.current_keyword != '' else 'Enrollment Information'
+                                root.ids.app_toolbar.right_action_items = [["chevron-left", content_screen.previous_page], [f'numeric-{content_screen.registrar.page}', lambda x: x], ["chevron-right", content_screen.next_page]] if not content_screen.searching else [['close', content_screen.close_search], ["chevron-left", content_screen.previous_page], ["chevron-right", content_screen.next_page]]
+
+
+                            # ScrollView:
+                            RecycleView:
+                                Contents: #MDList
+                                    id: content_screen
+
+                        MDBottomNavigationItem:
+                            name: 'screen 2'
+
+                            text: 'Details'
+                            icon: 'notebook-outline'
+
+                            on_enter:
+                                root.ids.app_toolbar.title = detail_section.code
+                                root.ids.app_toolbar.right_action_items = []
+
+                            DetailSection:
+                                id: detail_section
+
+        MDNavigationDrawer:
+            id: nav_drawer
+
+            DrawerContents:
+
+<DrawerContents>:
+    orientation: 'vertical'
+    padding: '15dp'
+    spacing: '10dp'
+
+    BoxLayout:
+        size_hint_y: 0.3
+        orientation: 'vertical'
+
+        AnchorLayout:
+            anchor_x: 'left'
+            size_hint_y: None
+            height: avatar.height
+
+            Image:
+                id: avatar
+                size_hint: None, None
+                size: '80dp', '80dp'
+                source: '.\images\logo.png'
+
+        MDLabel:
+            text: 'Registrar'
+            font_style: 'H6'
+            size_hint_y: None
+            height: self.texture_size[1]
+
+        MDLabel:
+            text: '[REDACTED]'
+            font_style: 'Overline'
+            size_hint_y: None
+            height: self.texture_size[1]
+
+    MDSeparator:
+        height: '2dp'
+
+    ScrollView:
+        id: content
+
+        DrawerContentsList:
+            id: content_list
+
+            OneLineIconListItem:
+            # DrawerContentsListItem:
+                divider: None
+                text: 'Search keywords'
+                on_release:
+                    root.parent.set_state('close')
+                    app.root.ids.nav_bottom.switch_tab('screen 1')
+
+                    app.get_running_app().root.ids.content_screen.open_prompt()
+
+                IconLeftWidget:
+                    icon: 'magnify'
+
+            OneLineIconListItem:
+            # DrawerContentsListItem:
+                divider: None
+                text: 'Refresh cookies'
+                on_release:
+                    root.parent.set_state('close')
+                    app.root.ids.nav_bottom.switch_tab('screen 1')
+
+                    app.get_running_app().root.ids.content_screen.refresh_cookies()
+
+                IconLeftWidget:
+                    icon: 'reload'
+
+
+            OneLineIconListItem:
+            # DrawerContentsListItem:
+                id: for_debug
+                divider: None
+                text: '[DEBUG]'
+                on_release:
+                    app.get_running_app().theme_cls.theme_style = 'Dark' if app.get_running_app().theme_cls.theme_style is 'Light' else 'Light'
+
+
+                IconLeftWidget:
+                    icon: 'language-python'
+
+    MDLabel:
+        id: creator_msg
+        text: '[REDACTED]'
+
+        theme_text_color: 'Hint'
+
+        halign: 'right'
+        font_style: 'Caption'
+        # italic: True
+
+        size_hint_y: None
+        height: self.texture_size[1]
+
+<DrawerContentsListItem>:
+    theme_text_color: "Custom"
+    on_release:
+        self.parent.set_color_item(self)
+        # print(self.ids.icon.text_color)
+        # print(app.theme_cls.primary_color)
+
+    IconLeftWidget:
+        id: icon
+        icon: root.icon
+        theme_text_color: "Custom"
+        text_color: root.text_color
+
+<Contents>:
+    spacing: '15dp'
+    padding: '15dp'
+
+    # ContentCardListItem:
+
+    # id: content_grid
+
+    size_hint_y: None
+    height: self.minimum_height
+    row_default_height: 72
+    cols: 2
+
+
+<ContentCardListItem>:
+    size_hint_y: None
+    height: '120dp'
+
+    on_release:
+        app.root.ids.nav_bottom.switch_tab('screen 2')
+        app.root.ids.detail_section.pass_control(root.subject_code)
+
+
+        # print(root.subject_code, root.subject_name_full, root.section, root.slots)
+
+        # for item in (code, subject, section, slots): print(item.font_size)
+
+        # print(root.size)
+        # print(root.pos)
+        # print()
+
+        # print(box.size)
+        # for i in (subject, section):  print('Label size ' + str(i.size), 'Text size ' + str(i.text_size),'Texture size ' + str(i.texture_size), 'Size hint ' + str(i.size_hint),'', sep='\n')
+
+    canvas:
+        Color:
+            rgba:
+                self.theme_cls.divider_color if root.divider is not None else (0, 0, 0, 0)
+        Line:
+            points: (root.x ,root.y, root.x+self.width, root.y) if root.divider == 'Full' else (root.x+root._txt_left_pad, root.y,root.x+self.width-root._txt_left_pad-root._txt_right_pad,root.y)
+        Color:
+            rgba: root.bg_color if root.bg_color else (0, 0, 0, 0)
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    MDCard:
+        pos: root.pos
+
+        orientation: "vertical"
+        padding: "10dp"
+        size_hint: 1, 1
+
+        MDLabel:
+            id: code
+
+            text: root.subject_code
+            theme_text_color: "Secondary"
+            font_style: 'Overline'
+            # font_size: '9sp'
+
+            size_hint_y: None
+            height: self.texture_size[1]
+
+        MDSeparator:
+            height: "1dp"
+
+        BoxLayout:
+            id: box
+
+            size_hint_y: None
+            height: 100
+
+            orientation: 'vertical'
+            padding: [0,0,0,0]
+            spacing: 0
+
+            MDLabel:
+                id: subject
+
+                text: root.subject_name
+                font_style: 'Button'
+                font_size: '12sp'
+
+                size_hint: 1, None
+                size: self.texture_size
+                valign: 'top'
+
+            MDLabel:
+                id: section
+
+                text: root.section
+                theme_text_color: 'Secondary'
+                font_style: 'Caption'
+                # font_size: '10sp'
+
+                text_size: self.size
+                valign:'top'
+
+        MDLabel:
+            id: slots
+
+            text: f'{root.slots} slot(s) left'
+            theme_text_color: 'Secondary'
+            font_style: 'Caption'
+            # font_size: '10sp'
+
+            text_size: self.size
+            valign: 'bottom'
+
+            shorten: True
+            shorten_from: 'left'
+
+<DetailSection>:
+    generalinfo: general_info
+    detaillist: detail_list
+    # listheader: list_header
+
+    orientation: 'vertical'
+
+    MDLabel:
+        id: general_info
+
+        text: 'No information selected.'
+
+        size_hint_y: 0.2
+        padding: [10, 10]
+
+        font_name: './fonts/RobotoMono-Regular'
+        font_size: '10sp'
+        text_size: self.size
+        valign: 'top'
+
+    MDSeparator:
+        height: '2dp'
+
+    BoxLayout:
+        size_hint_y: 0.8
+        orientation: 'vertical'
+        padding: '10dp'
+
+        MDLabel:
+            text: 'List of students'
+            font_style: 'H6'
+            size_hint_y: 0.1
+
+            text_size: self.size
+            valign: 'center'
+
+        # MDLabel:
+        #     id: list_header
+        #     size_hint_y: 0.1
+        #     shorten: True
+        #     shorten_from: 'right'
+
+        ScrollView:
+            MDList:
+                id: detail_list
+
+                OneLineListItem:
+                    text: 'No schedule code selected yet.'
+                    divider: None
+
+<DetailListItem>:
+    text: root.line_1
+    secondary_text: root.line_2
+
+    font_style: 'Subtitle1'
+    secondary_font_style: 'Overline'
+
+    # theme_text_color: 'Custom'
+    # text_color: [3, 169, 244, 255]
+
+    IconLeftWidget:
+        icon: f'gender-{root.gender.lower()}'
+        theme_text_color: 'Custom'
+        text_color: [3/255, 169/255, 244/255, 1] if root.gender.lower() == 'male' else [233/255, 30/255, 99/255, 1]
+
+
+<DebugDialog>:
+    id: debug_dialog
+    size_hint: 0.8, 0.35
+
+    text_button_ok: 'Okay'
+    text_button_cancel: 'Cancel'
+    events_callback:
+        print('See dialog window')
